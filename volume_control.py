@@ -95,6 +95,7 @@ while True:
     # Use the time between two pictures to work out the frames per second (FPS).
     currentTime = time.time()
     fps = 1 / (currentTime - previousTime)
+    print(f"FPS: {fps:.1f}")  # Example: FPS: 29.7
     previousTime = currentTime
 
     computervision2.putText(
