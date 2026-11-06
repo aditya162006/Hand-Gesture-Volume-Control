@@ -1,14 +1,14 @@
 # Hand Gesture Volume Control
 
-I built a custom Python module, `HandTrackingModule.py`, to track hand movements with a webcam. In this project, I use it to control the volume on a Windows computer. Spreading my thumb and index finger raises the volume, and bringing them together lowers it.
+I built a custom Python module, `HandTrackingModule.py`, to track hand movements with a webcam. In this project, I use it to control the volume on a Windows computer. I raise my middle finger to adjust the volume with my thumb and index finger, then fold my middle finger to lock the setting.
 
 ## Project files
 
 | File | What it does |
 | --- | --- |
 | `HandTrackingModule.py` | My reusable hand tracker. It uses MediaPipe to locate hand landmarks and returns their pixel coordinates. Run this file on its own to test tracking with the webcam. |
-| `volume_control.py` | The main script. It uses the tracker to find the thumb and index fingertips, measures the gap between them, and uses Pycaw to set the Windows speaker volume. It draws the blue volume bar on the webcam image. |
-
+| `volume_control.py` | The main script. It compares fingertip spread with palm width, checks the middle-finger gesture, and uses Pycaw to set the Windows speaker volume. The webcam window shows the volume bar and whether the control is locked. |
+| `README.md` | Explains how the gesture controls volume and how to install, run, and troubleshoot the project. |
 
 ## The hand-tracking module
 
@@ -23,21 +23,21 @@ Keeping these steps in a separate file lets me test the tracker on its own or re
 
 ## How a gesture changes the volume
 
-The controller reads **point 4** (thumb tip) and **point 8** (index fingertip). It measures the straight-line distance between them in the camera image. In Python, that calculation is:
+I measure two distances in each frame: the gap between the thumb and index fingertips (points 4 and 8), and the width of the palm between the base of the index finger and the base of the pinky (points 5 and 17).
 
 ```python
-gap = math.hypot(fingerX - thumbX, fingerY - thumbY)
+fingerSpread = gap / palmWidth
 ```
 
-I used two distances, **50 pixels** and **300 pixels**, as the lower and upper limits. NumPy’s `interp` function maps the gap to the speaker’s volume range in decibels (dB). Pycaw sends that value to Windows. The blue bar shows where the gesture falls within the chosen range.
+For example, a 60-pixel gap across a 100-pixel palm gives a spread of 0.6. If the hand moves closer and both measurements double, the spread is still 0.6. This makes the control less sensitive to distance from the webcam.
 
-| Fingertip gap | Blue bar | Volume sent to Windows |
+| Finger spread while adjusting | Blue bar | Windows volume setting |
 | --- | --- | --- |
-| 50 pixels or less | 0% | Device minimum |
-| 175 pixels | 50% | Halfway between the minimum and maximum dB values |
-| 300 pixels or more | 100% | Device maximum |
+| 0.20 or less | 0% | Device minimum |
+| 0.85 | 50% | Midpoint of the device’s decibel range |
+| 1.50 or more | 100% | Device maximum |
 
-**Try this:** hold your fingers a fixed distance apart and move your hand toward the webcam. The gap takes up more pixels, so the volume can rise even though your fingers stayed in the same position relative to each other. For steadier control, keep your hand roughly the same distance from the camera.
+NumPy maps the spread to the device’s volume range, and Pycaw sends the setting to Windows. With the palm upright, the controller checks whether the middle fingertip (point 12) is above its middle joint (point 10). Folding that finger locks the last setting.
 
 ## Set it up in VS Code
 
@@ -71,11 +71,13 @@ From the same PowerShell terminal, run:
 .\.venv\Scripts\python.exe volume_control.py
 ```
 
-Hold one hand in front of the webcam. A pink line joins your thumb and index finger. Slowly spread them and watch the blue bar rise. Bring them close together and the middle dot turns green. Keep your hand about the same distance from the camera while you try it.
+1. Face your palm toward the webcam with your fingers pointing up. Raise your middle finger until the window shows **Adjusting volume**.
+2. Spread your thumb and index finger to turn the volume up. Bring them together to turn it down.
+3. Fold your middle finger. When **Volume locked** appears, you can move your thumb without changing the setting. Raise the middle finger again to resume.
 
 Click the camera window and press **q** to quit.
 
 To use the **▶ Run Python File** button in VS Code, press **Ctrl+Shift+P**, choose **Python: Select Interpreter**, and select the Python inside `.venv`. Then open `volume_control.py` and click ▶.
 
+-- by **Aditya Mishra**.
 
-by **Aditya Mishra**.
