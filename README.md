@@ -2,6 +2,13 @@
 
 I built a custom Python module, `HandTrackingModule.py`, to track hand movements with a webcam. In this project, I use it to control the volume on a Windows computer. I raise my middle finger to adjust the volume with my thumb and index finger, then fold my middle finger to lock the setting.
 
+## What makes this volume controller different?
+
+My first version mapped a fingertip gap of 50–300 pixels directly to volume. That meant I could turn the volume up just by moving my hand closer to the webcam, even if I held my fingers still. I made two changes:
+
+- **Use palm width as a reference.** I divide the thumb-to-index gap by the width of my palm. A 60-pixel gap across a 100-pixel palm gives the same reading as a 90-pixel gap across a 150-pixel palm. This makes the control less sensitive to how far I sit from the webcam.
+- **Choose when to adjust.** With my palm upright, I raise my middle finger to set the volume. When I reach the level I want, I fold that finger. The window shows **Volume locked**, and I can bring my thumb and index finger back together without turning the sound down.
+
 ## Project files
 
 | File | What it does |
@@ -19,7 +26,7 @@ A **landmark** is a point on the hand, such as a fingertip or a knuckle. My modu
 | `findHands(img)` | Converts the camera frame from OpenCV’s BGR color order to RGB, runs the hand model, and optionally draws the hand outline. |
 | `findPosition(img)` | Uses the latest detection to return the points for one hand as a list of `[point number, x, y]` values. It returns an empty list when no hand is visible. |
 
-Keeping these steps in a separate file lets me test the tracker on its own or reuse it for another gesture.
+I later reused this same module in my two-hand finger counter. Each project has its own gesture rules, but both read the hand points in the same way. you can check the project at : https://github.com/aditya162006/Two-Hand-Finger-Counter
 
 ## How a gesture changes the volume
 
@@ -28,8 +35,6 @@ I measure two distances in each frame: the gap between the thumb and index finge
 ```python
 fingerSpread = gap / palmWidth
 ```
-
-For example, a 60-pixel gap across a 100-pixel palm gives a spread of 0.6. If the hand moves closer and both measurements double, the spread is still 0.6. This makes the control less sensitive to distance from the webcam.
 
 | Finger spread while adjusting | Blue bar | Windows volume setting |
 | --- | --- | --- |
@@ -79,5 +84,5 @@ Click the camera window and press **q** to quit.
 
 To use the **▶ Run Python File** button in VS Code, press **Ctrl+Shift+P**, choose **Python: Select Interpreter**, and select the Python inside `.venv`. Then open `volume_control.py` and click ▶.
 
--- by **Aditya Mishra**.
+ by **Aditya Mishra**.
 
